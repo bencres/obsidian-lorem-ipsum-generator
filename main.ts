@@ -133,7 +133,6 @@ export class LoremIpsumSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
-		containerEl.createEl("h2", { text: "Lorem Ipsum Generator Settings" });
 
 		new Setting(containerEl)
 			.setName("Minimum words per sentence")
@@ -213,11 +212,11 @@ export class LoremIpsumSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		containerEl.createEl("h2", { text: "Custom Generation Settings" });
+		new Setting(containerEl).setName("Custom generation").setHeading();
 
 		new Setting(containerEl)
 			.setName(
-				"Add newline after each paragraph when generating custom text",
+				"Add newline after each paragraph when generating custom paragraphs",
 			)
 			.addToggle((toggle) =>
 				toggle
