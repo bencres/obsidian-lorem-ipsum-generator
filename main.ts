@@ -1,3 +1,4 @@
+import { text } from "node:stream/consumers";
 import {
 	App,
 	Editor,
@@ -48,11 +49,15 @@ export default class LoremIpsumPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "generate-paragraph-custom-amount",
-			name: "Generate a custom amount of paragraphs",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				new ParagraphCountModal(this.app, (amount) => {
-					const text = generateParagraphs({ amount });
+			id: "generate-custom-text",
+			name: "Generate a custom amount of text",
+			editorCallback: (editor: Editor, _view: MarkdownView) => {
+				new ParagraphCountModal(this.app, (textAmounts) => {
+					const text = generateParagraphs({
+						amount: textAmounts.paragraphAmount,
+						minSentences: textAmounts.minSentences,
+						maxSentences: textAmounts.maxSentences,
+					});
 					const cursorPos = editor.getCursor();
 					editor.replaceRange(text, cursorPos);
 					editor.setCursor(
@@ -116,26 +121,64 @@ class SampleSettingTab extends PluginSettingTab {
 	}
 }
 
-class ParagraphCountModal extends Modal {
-	private onSubmit: (amount: number) => void;
+interface ParagraphModalValues {
+	paragraphAmount: number;
+	minSentences: number;
+	maxSentences: number;
+}
 
-	constructor(app: App, onSubmit: (amount: number) => void) {
+export class ParagraphCountModal extends Modal {
+	private onSubmit: (values: ParagraphModalValues) => void;
+
+	constructor(app: App, onSubmit: (values: ParagraphModalValues) => void) {
 		super(app);
 		this.onSubmit = onSubmit;
 	}
 
-	onOpen() {
+	onOpen(): void {
 		const { contentEl } = this;
-		contentEl.createEl("h2", { text: "How many paragraphs?" });
 
-		let amount = 1;
+		contentEl.empty();
+		contentEl.createEl("h2", { text: "Generate Lorem Ipsum" });
+
+		let paragraphAmount = 1;
+		let minSentences = 1;
+		let maxSentences = 5;
+
 		new Setting(contentEl)
-			.setName("Paragraph count")
+			.setName("Min sentences per paragraph")
 			.addText((text) =>
 				text
-					.setValue(String(amount))
-					.onChange((val) => (amount = Number(val))),
+					.setPlaceholder("e.g. 1")
+					.setValue(String(minSentences))
+					.onChange((val) => {
+						const num = Number(val);
+						if (!isNaN(num) && num > 0) minSentences = num;
+					}),
 			);
+
+		new Setting(contentEl)
+			.setName("Max sentences per paragraph")
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. 5")
+					.setValue(String(maxSentences))
+					.onChange((val) => {
+						const num = Number(val);
+						if (!isNaN(num) && num >= minSentences)
+							maxSentences = num;
+					}),
+			);
+
+		new Setting(contentEl).setName("Number of paragraphs").addText((text) =>
+			text
+				.setPlaceholder("e.g. 2")
+				.setValue(String(paragraphAmount))
+				.onChange((val) => {
+					const num = Number(val);
+					if (!isNaN(num) && num > 0) paragraphAmount = num;
+				}),
+		);
 
 		new Setting(contentEl).addButton((btn) =>
 			btn
@@ -143,8 +186,16 @@ class ParagraphCountModal extends Modal {
 				.setCta()
 				.onClick(() => {
 					this.close();
-					this.onSubmit(amount);
+					this.onSubmit({
+						paragraphAmount,
+						minSentences,
+						maxSentences,
+					});
 				}),
 		);
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
 	}
 }
