@@ -25,12 +25,16 @@ export function generateParagraphs({
 	minWords = 4,
 	maxSentences = 5,
 	minSentences = 1,
+	addNewline = false,
+	prependText = "",
 }: {
 	amount: number;
 	maxWords?: number;
 	minWords?: number;
 	maxSentences?: number;
 	minSentences?: number;
+	addNewline?: boolean;
+	prependText?: string;
 }): string {
 	const lorem = new LoremIpsum({
 		sentencesPerParagraph: {
@@ -43,5 +47,10 @@ export function generateParagraphs({
 		},
 	});
 
-	return lorem.generateParagraphs(amount);
+	const paragraphs = Array.from({ length: amount }, () => {
+		const text = lorem.generateParagraphs(1);
+		return prependText ? `${prependText} ${text}` : text;
+	});
+
+	return addNewline ? paragraphs.join("\n\n") : paragraphs.join(" ");
 }

@@ -7,3 +7,5 @@ Generate filler lorem ipsum text anywhere. This plugin adds three commands and a
 	- Generate a single lorem ipsum paragraph. Minimum and maximum sentences are defined in settings, but have reasonable defaults.
 3. Generate a custom amount of paragraphs
 	- Open a modal window to generate a custom amount of paragraphs.
+
+Developed by Ben Cressman https://bencres.dev

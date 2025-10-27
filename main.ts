@@ -1,3 +1,4 @@
+import { text } from "node:stream/consumers";
 import {
 	App,
 	Editor,
@@ -69,14 +70,16 @@ export default class LoremIpsumPlugin extends Plugin {
 			id: "generate-custom-text",
 			name: "Generate a custom amount of paragraphs",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				new ParagraphCountModal(this.app, (textAmounts) => {
-					const { minWords, maxWords } = this.settings;
+				new ParagraphCountModal(this.app, (generationSettings) => {
+					const { minWords, maxWords, minSentences, maxSentences } =
+						this.settings;
 					const text = generateParagraphs({
-						amount: textAmounts.paragraphAmount,
+						amount: generationSettings.paragraphAmount,
 						minWords: minWords,
 						maxWords: maxWords,
-						minSentences: textAmounts.minSentences,
-						maxSentences: textAmounts.maxSentences,
+						minSentences: minSentences,
+						maxSentences: maxSentences,
+						addNewline: generationSettings.addNewline,
 					});
 					const cursorPos = editor.getCursor();
 					editor.replaceRange(text, cursorPos);
@@ -206,6 +209,13 @@ export class LoremIpsumSettingTab extends PluginSettingTab {
 
 interface ParagraphModalValues {
 	paragraphAmount: number;
+	addNewline: boolean;
+}
+
+interface ParagraphModalValues {
+	paragraphAmount: number;
+	addNewline: boolean;
+	prependText: string;
 }
 
 export class ParagraphCountModal extends Modal {
@@ -223,6 +233,8 @@ export class ParagraphCountModal extends Modal {
 		contentEl.createEl("h2", { text: "Generate Lorem Ipsum" });
 
 		let paragraphAmount = 4;
+		let addNewline = false;
+		let prependText = "";
 
 		new Setting(contentEl).setName("Number of paragraphs").addText((text) =>
 			text
@@ -234,6 +246,30 @@ export class ParagraphCountModal extends Modal {
 				}),
 		);
 
+		new Setting(contentEl)
+			.setName("Add newline after each paragraph")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(addNewline)
+					.onChange((val) => (addNewline = val)),
+			);
+
+		new Setting(contentEl)
+			.setName("Prepend text")
+			.setDesc("Choose text to prepend before each paragraph")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("", "None")
+					.addOption("- ", "Dash (-)")
+					.addOption("* ", "Asterisk (*)")
+					.addOption("> ", "Quote (> )")
+					.addOption("• ", "Bullet (• )")
+					.setValue(prependText)
+					.onChange((value) => {
+						prependText = value;
+					}),
+			);
+
 		new Setting(contentEl).addButton((btn) =>
 			btn
 				.setButtonText("Generate")
@@ -242,6 +278,8 @@ export class ParagraphCountModal extends Modal {
 					this.close();
 					this.onSubmit({
 						paragraphAmount,
+						addNewline,
+						prependText,
 					});
 				}),
 		);
