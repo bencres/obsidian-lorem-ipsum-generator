@@ -3,7 +3,7 @@
 	"name": "Lorem Ipsum Generator",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Generates filler lorem ipsum text inside of Obsidian.",
+	"description": "Generate filler lorem ipsum text inside of Obsidian.",
 	"author": "Obsidian",
 	"authorUrl": "https://bencres.dev",
 	"fundingUrl": "https://obsidian.md/pricing",
