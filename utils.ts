@@ -47,9 +47,12 @@ export function generateParagraphs({
 		},
 	});
 
-	const paragraphs = Array.from({ length: amount }, () => {
+	const paragraphs = Array.from({ length: amount }, (_, i) => {
 		const text = lorem.generateParagraphs(1);
-		return prependText ? `${prependText} ${text}` : text;
+		if (prependText === "num") {
+			return `${i + 1}. ${text}`;
+		}
+		return prependText ? `${prependText}${text}` : text;
 	});
 
 	return addNewline ? paragraphs.join("\n\n") : paragraphs.join("\n");

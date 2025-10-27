@@ -70,7 +70,7 @@ export default class LoremIpsumPlugin extends Plugin {
 
 		this.addCommand({
 			id: "generate-custom-text",
-			name: "Generate a custom amount of paragraphs",
+			name: "Generate custom paragraphs",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
 				new ParagraphCountModal(this.app, (generationSettings) => {
 					const {
@@ -264,10 +264,10 @@ export class ParagraphCountModal extends Modal {
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("", "None")
-					.addOption("-", "Dash (-)")
-					.addOption("*", "Asterisk (*)")
-					.addOption(">", "Quote (> )")
-					.addOption("•", "Bullet (• )")
+					.addOption("-", "- Dash")
+					.addOption("- [ ]", "- [ ] Task")
+					.addOption(">", "> Quote")
+					.addOption("num", "1. Numbered")
 					.setValue(prependText)
 					.onChange((value) => {
 						prependText = value;
