@@ -9,7 +9,7 @@ import {
 	Setting,
 } from "obsidian";
 
-import { generateSentence } from "./utils";
+import { generateParagraphs, generateSentences } from "./utils";
 
 interface LoremIpsumPluginSettings {
 	mySetting: string;
@@ -29,7 +29,21 @@ export default class LoremIpsumPlugin extends Plugin {
 			id: "generate-sentence",
 			name: "Generate a single sentence",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				const sentence = generateSentence();
+				const sentence = generateSentence({ amount: 1 });
+				const cursorPos = editor.getCursor();
+				editor.replaceRange(sentence, cursorPos);
+				editor.setCursor(
+					cursorPos.line,
+					cursorPos.ch + sentence.length,
+				);
+			},
+		});
+
+		this.addCommand({
+			id: "generate-paragraph",
+			name: "Generate a five sentence paragraph",
+			editorCallback: (editor: Editor, _view: MarkdownView) => {
+				const sentence = generateParagraphs({ amount: 1 });
 				const cursorPos = editor.getCursor();
 				editor.replaceRange(sentence, cursorPos);
 				editor.setCursor(
