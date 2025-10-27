@@ -1,10 +1,10 @@
 {
 	"id": "lorem-ipsum-generator",
 	"name": "Lorem Ipsum Generator",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Generate filler lorem ipsum text inside of Obsidian.",
-	"author": "Obsidian",
+	"description": "Generate filler lorem ipsum text",
+	"author": "Ben Cressman",
 	"authorUrl": "https://bencres.dev",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false

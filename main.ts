@@ -213,8 +213,12 @@ export class LoremIpsumSettingTab extends PluginSettingTab {
 					}),
 			);
 
+		containerEl.createEl("h2", { text: "Custom Generation Settings" });
+
 		new Setting(containerEl)
-			.setName("Add newline after each paragraph")
+			.setName(
+				"Add newline after each paragraph when generating custom text",
+			)
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.addNewlineToParagraphs)
