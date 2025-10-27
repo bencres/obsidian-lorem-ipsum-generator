@@ -1,10 +1,8 @@
-import { text } from "node:stream/consumers";
 import {
 	App,
 	Editor,
 	MarkdownView,
 	Modal,
-	Notice,
 	Plugin,
 	PluginSettingTab,
 	Setting,
@@ -13,11 +11,17 @@ import {
 import { generateParagraphs, generateSentences } from "./utils";
 
 interface LoremIpsumPluginSettings {
-	mySetting: string;
+	minWords: number;
+	maxWords: number;
+	minSentences: number;
+	maxSentences: number;
 }
 
 const DEFAULT_SETTINGS: LoremIpsumPluginSettings = {
-	mySetting: "default",
+	minWords: 4,
+	maxWords: 16,
+	minSentences: 1,
+	maxSentences: 5,
 };
 
 export default class LoremIpsumPlugin extends Plugin {
@@ -30,7 +34,12 @@ export default class LoremIpsumPlugin extends Plugin {
 			id: "generate-sentence",
 			name: "Generate a sentence",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				const text = generateSentences({ amount: 1 });
+				const { minWords, maxWords } = this.settings;
+				const text = generateSentences({
+					amount: 1,
+					minWords: minWords,
+					maxWords: maxWords,
+				});
 				const cursorPos = editor.getCursor();
 				editor.replaceRange(text, cursorPos);
 				editor.setCursor(cursorPos.line, cursorPos.ch + text.length);
@@ -41,7 +50,15 @@ export default class LoremIpsumPlugin extends Plugin {
 			id: "generate-paragraph",
 			name: "Generate a paragraph",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				const text = generateParagraphs({ amount: 1 });
+				const { minWords, maxWords, minSentences, maxSentences } =
+					this.settings;
+				const text = generateParagraphs({
+					amount: 1,
+					minWords: minWords,
+					maxWords: maxWords,
+					minSentences: minSentences,
+					maxSentences: maxSentences,
+				});
 				const cursorPos = editor.getCursor();
 				editor.replaceRange(text, cursorPos);
 				editor.setCursor(cursorPos.line, cursorPos.ch + text.length);
@@ -53,8 +70,11 @@ export default class LoremIpsumPlugin extends Plugin {
 			name: "Generate a custom amount of text",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
 				new ParagraphCountModal(this.app, (textAmounts) => {
+					const { minWords, maxWords } = this.settings;
 					const text = generateParagraphs({
 						amount: textAmounts.paragraphAmount,
+						minWords: minWords,
+						maxWords: maxWords,
 						minSentences: textAmounts.minSentences,
 						maxSentences: textAmounts.maxSentences,
 					});
@@ -68,11 +88,8 @@ export default class LoremIpsumPlugin extends Plugin {
 			},
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new LoremIpsumSettingTab(this.app, this));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
 			console.log("click", evt);
 		});
@@ -93,7 +110,7 @@ export default class LoremIpsumPlugin extends Plugin {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
+export class LoremIpsumSettingTab extends PluginSettingTab {
 	plugin: LoremIpsumPlugin;
 
 	constructor(app: App, plugin: LoremIpsumPlugin) {
@@ -105,17 +122,83 @@ class SampleSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
+		containerEl.createEl("h2", { text: "Lorem Ipsum Generator Settings" });
 
 		new Setting(containerEl)
-			.setName("Setting #1")
-			.setDesc("It's a secret")
+			.setName("Minimum words per sentence")
+			.setDesc(
+				"The smallest number of words a generated sentence can have.",
+			)
 			.addText((text) =>
 				text
-					.setPlaceholder("Enter your secret")
-					.setValue(this.plugin.settings.mySetting)
+					.setPlaceholder("e.g. 4")
+					.setValue(this.plugin.settings.minWords.toString())
 					.onChange(async (value) => {
-						this.plugin.settings.mySetting = value;
-						await this.plugin.saveSettings();
+						const val = Number(value);
+						if (!isNaN(val) && val > 0) {
+							this.plugin.settings.minWords = val;
+							await this.plugin.saveSettings();
+						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Maximum words per sentence")
+			.setDesc(
+				"The largest number of words a generated sentence can have.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. 16")
+					.setValue(this.plugin.settings.maxWords.toString())
+					.onChange(async (value) => {
+						const val = Number(value);
+						if (
+							!isNaN(val) &&
+							val >= this.plugin.settings.minWords
+						) {
+							this.plugin.settings.maxWords = val;
+							await this.plugin.saveSettings();
+						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Minimum sentences per paragraph")
+			.setDesc(
+				"The smallest number of sentences a generated paragraph can have.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. 1")
+					.setValue(this.plugin.settings.minSentences.toString())
+					.onChange(async (value) => {
+						const val = Number(value);
+						if (!isNaN(val) && val > 0) {
+							this.plugin.settings.minSentences = val;
+							await this.plugin.saveSettings();
+						}
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Maximum sentences per paragraph")
+			.setDesc(
+				"The largest number of sentences a generated paragraph can have.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. 5")
+					.setValue(this.plugin.settings.maxSentences.toString())
+					.onChange(async (value) => {
+						const val = Number(value);
+						if (
+							!isNaN(val) &&
+							val >= this.plugin.settings.minSentences
+						) {
+							this.plugin.settings.maxSentences = val;
+							await this.plugin.saveSettings();
+						}
 					}),
 			);
 	}
