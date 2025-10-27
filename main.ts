@@ -29,7 +29,13 @@ export default class LoremIpsumPlugin extends Plugin {
 			id: "generate-sentence",
 			name: "Generate a single sentence",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				editor.replaceRange(generateSentence(), editor.getCursor());
+				const sentence = generateSentence();
+				const cursorPos = editor.getCursor();
+				editor.replaceRange(sentence, cursorPos);
+				editor.setCursor(
+					cursorPos.line,
+					cursorPos.ch + sentence.length,
+				);
 			},
 		});
 
