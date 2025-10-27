@@ -67,7 +67,7 @@ export default class LoremIpsumPlugin extends Plugin {
 
 		this.addCommand({
 			id: "generate-custom-text",
-			name: "Generate a custom amount of text",
+			name: "Generate a custom amount of paragraphs",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
 				new ParagraphCountModal(this.app, (textAmounts) => {
 					const { minWords, maxWords } = this.settings;
@@ -206,8 +206,6 @@ export class LoremIpsumSettingTab extends PluginSettingTab {
 
 interface ParagraphModalValues {
 	paragraphAmount: number;
-	minSentences: number;
-	maxSentences: number;
 }
 
 export class ParagraphCountModal extends Modal {
@@ -224,34 +222,7 @@ export class ParagraphCountModal extends Modal {
 		contentEl.empty();
 		contentEl.createEl("h2", { text: "Generate Lorem Ipsum" });
 
-		let paragraphAmount = 1;
-		let minSentences = 1;
-		let maxSentences = 5;
-
-		new Setting(contentEl)
-			.setName("Min sentences per paragraph")
-			.addText((text) =>
-				text
-					.setPlaceholder("e.g. 1")
-					.setValue(String(minSentences))
-					.onChange((val) => {
-						const num = Number(val);
-						if (!isNaN(num) && num > 0) minSentences = num;
-					}),
-			);
-
-		new Setting(contentEl)
-			.setName("Max sentences per paragraph")
-			.addText((text) =>
-				text
-					.setPlaceholder("e.g. 5")
-					.setValue(String(maxSentences))
-					.onChange((val) => {
-						const num = Number(val);
-						if (!isNaN(num) && num >= minSentences)
-							maxSentences = num;
-					}),
-			);
+		let paragraphAmount = 4;
 
 		new Setting(contentEl).setName("Number of paragraphs").addText((text) =>
 			text
@@ -271,8 +242,6 @@ export class ParagraphCountModal extends Modal {
 					this.close();
 					this.onSubmit({
 						paragraphAmount,
-						minSentences,
-						maxSentences,
 					});
 				}),
 		);
