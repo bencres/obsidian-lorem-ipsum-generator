@@ -27,29 +27,39 @@ export default class LoremIpsumPlugin extends Plugin {
 
 		this.addCommand({
 			id: "generate-sentence",
-			name: "Generate a single sentence",
+			name: "Generate a sentence",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				const sentence = generateSentence({ amount: 1 });
+				const text = generateSentences({ amount: 1 });
 				const cursorPos = editor.getCursor();
-				editor.replaceRange(sentence, cursorPos);
-				editor.setCursor(
-					cursorPos.line,
-					cursorPos.ch + sentence.length,
-				);
+				editor.replaceRange(text, cursorPos);
+				editor.setCursor(cursorPos.line, cursorPos.ch + text.length);
 			},
 		});
 
 		this.addCommand({
 			id: "generate-paragraph",
-			name: "Generate a five sentence paragraph",
+			name: "Generate a paragraph",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				const sentence = generateParagraphs({ amount: 1 });
+				const text = generateParagraphs({ amount: 1 });
 				const cursorPos = editor.getCursor();
-				editor.replaceRange(sentence, cursorPos);
-				editor.setCursor(
-					cursorPos.line,
-					cursorPos.ch + sentence.length,
-				);
+				editor.replaceRange(text, cursorPos);
+				editor.setCursor(cursorPos.line, cursorPos.ch + text.length);
+			},
+		});
+
+		this.addCommand({
+			id: "generate-paragraph-custom-amount",
+			name: "Generate a custom amount of paragraphs",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				new ParagraphCountModal(this.app, (amount) => {
+					const text = generateParagraphs({ amount });
+					const cursorPos = editor.getCursor();
+					editor.replaceRange(text, cursorPos);
+					editor.setCursor(
+						cursorPos.line,
+						cursorPos.ch + text.length,
+					);
+				}).open();
 			},
 		});
 
@@ -103,5 +113,38 @@ class SampleSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+	}
+}
+
+class ParagraphCountModal extends Modal {
+	private onSubmit: (amount: number) => void;
+
+	constructor(app: App, onSubmit: (amount: number) => void) {
+		super(app);
+		this.onSubmit = onSubmit;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl("h2", { text: "How many paragraphs?" });
+
+		let amount = 1;
+		new Setting(contentEl)
+			.setName("Paragraph count")
+			.addText((text) =>
+				text
+					.setValue(String(amount))
+					.onChange((val) => (amount = Number(val))),
+			);
+
+		new Setting(contentEl).addButton((btn) =>
+			btn
+				.setButtonText("Generate")
+				.setCta()
+				.onClick(() => {
+					this.close();
+					this.onSubmit(amount);
+				}),
+		);
 	}
 }
