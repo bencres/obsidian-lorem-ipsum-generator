@@ -16,6 +16,7 @@ interface LoremIpsumPluginSettings {
 	maxWords: number;
 	minSentences: number;
 	maxSentences: number;
+	addNewlineToParagraphs: boolean;
 }
 
 const DEFAULT_SETTINGS: LoremIpsumPluginSettings = {
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: LoremIpsumPluginSettings = {
 	maxWords: 16,
 	minSentences: 1,
 	maxSentences: 5,
+	addNewlineToParagraphs: true,
 };
 
 export default class LoremIpsumPlugin extends Plugin {
@@ -71,15 +73,21 @@ export default class LoremIpsumPlugin extends Plugin {
 			name: "Generate a custom amount of paragraphs",
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
 				new ParagraphCountModal(this.app, (generationSettings) => {
-					const { minWords, maxWords, minSentences, maxSentences } =
-						this.settings;
+					const {
+						minWords,
+						maxWords,
+						minSentences,
+						maxSentences,
+						addNewlineToParagraphs,
+					} = this.settings;
 					const text = generateParagraphs({
 						amount: generationSettings.paragraphAmount,
 						minWords: minWords,
 						maxWords: maxWords,
 						minSentences: minSentences,
 						maxSentences: maxSentences,
-						addNewline: generationSettings.addNewline,
+						addNewline: addNewlineToParagraphs,
+						prependText: generationSettings.prependText,
 					});
 					const cursorPos = editor.getCursor();
 					editor.replaceRange(text, cursorPos);
@@ -204,17 +212,22 @@ export class LoremIpsumSettingTab extends PluginSettingTab {
 						}
 					}),
 			);
+
+		new Setting(containerEl)
+			.setName("Add newline after each paragraph")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.addNewlineToParagraphs)
+					.onChange(async (value) => {
+						this.plugin.settings.addNewlineToParagraphs = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 }
 
 interface ParagraphModalValues {
 	paragraphAmount: number;
-	addNewline: boolean;
-}
-
-interface ParagraphModalValues {
-	paragraphAmount: number;
-	addNewline: boolean;
 	prependText: string;
 }
 
@@ -233,7 +246,6 @@ export class ParagraphCountModal extends Modal {
 		contentEl.createEl("h2", { text: "Generate Lorem Ipsum" });
 
 		let paragraphAmount = 4;
-		let addNewline = false;
 		let prependText = "";
 
 		new Setting(contentEl).setName("Number of paragraphs").addText((text) =>
@@ -247,23 +259,15 @@ export class ParagraphCountModal extends Modal {
 		);
 
 		new Setting(contentEl)
-			.setName("Add newline after each paragraph")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(addNewline)
-					.onChange((val) => (addNewline = val)),
-			);
-
-		new Setting(contentEl)
 			.setName("Prepend text")
 			.setDesc("Choose text to prepend before each paragraph")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("", "None")
-					.addOption("- ", "Dash (-)")
-					.addOption("* ", "Asterisk (*)")
-					.addOption("> ", "Quote (> )")
-					.addOption("• ", "Bullet (• )")
+					.addOption("-", "Dash (-)")
+					.addOption("*", "Asterisk (*)")
+					.addOption(">", "Quote (> )")
+					.addOption("•", "Bullet (• )")
 					.setValue(prependText)
 					.onChange((value) => {
 						prependText = value;
@@ -278,7 +282,6 @@ export class ParagraphCountModal extends Modal {
 					this.close();
 					this.onSubmit({
 						paragraphAmount,
-						addNewline,
 						prependText,
 					});
 				}),

@@ -52,5 +52,5 @@ export function generateParagraphs({
 		return prependText ? `${prependText} ${text}` : text;
 	});
 
-	return addNewline ? paragraphs.join("\n\n") : paragraphs.join(" ");
+	return addNewline ? paragraphs.join("\n\n") : paragraphs.join("\n");
 }
