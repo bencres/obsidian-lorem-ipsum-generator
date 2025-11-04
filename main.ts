@@ -1,4 +1,3 @@
-import { text } from "node:stream/consumers";
 import {
 	App,
 	Editor,
@@ -100,10 +99,6 @@ export default class LoremIpsumPlugin extends Plugin {
 		});
 
 		this.addSettingTab(new LoremIpsumSettingTab(this.app, this));
-
-		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
-			console.log("click", evt);
-		});
 	}
 
 	onunload() {}
